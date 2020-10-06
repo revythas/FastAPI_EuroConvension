@@ -1,0 +1,52 @@
+version: "3.7"
+services:
+  redis:
+    container_name: redis-cont
+    image: redis:alpine
+
+    environment:
+      - REDIS_PASSWORD=ubuntu
+      - REDIS_REPLICATION_MODE=master
+
+    ports:
+      - 6379:6379
+
+    volumes:
+      # save redisearch data to make data persistent afetr restarting the service
+      - ./redis-data:/data
+
+    command:
+      - --save 900 1
+      - --requirepass ubuntu
+
+    networks:
+      - redis-net
+
+  redisinsight: # redis db visualization dashboard
+    container_name: redis-insight
+    image: redislabs/redisinsight
+    ports:
+      - 8001:8001
+    volumes:
+      - redisinsight:/db
+    networks:
+      - redis-net
+
+  web:
+    container_name: converter_api
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - 5000:5000
+    depends_on:
+      - redis
+    networks:
+      - redis-net
+
+networks:
+  redis-net:
+
+volumes:
+  redis-data:
+  redisinsight:
