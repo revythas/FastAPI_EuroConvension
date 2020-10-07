@@ -1,12 +1,9 @@
 import json
 import os
 import sys
-from datetime import datetime, timedelta
-from datetime import timedelta
-from datetime import date
-from pydantic import BaseModel
+from datetime import date, datetime, timedelta
 from typing import Optional
-
+from pydantic import BaseModel
 import httpx
 import redis
 from dotenv import load_dotenv
@@ -18,18 +15,6 @@ class Item(BaseModel):
     price: float
     currency: str
     date : Optional[str] = None
-
-
-# curl -X GET "http://localhost:5000/route-optima/USD" -H  "accept: application/json"
-# curl -X POST "http://localhost:5000/currency/" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"price\":213.2,\"currency\":\"USD\"}"
-# curl -X POST "http://localhost:5000/currency/" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"price\":100,\"currency\":\"USD\"}"
-# curl -X POST "http://localhost:5000/currency/" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"price\":150.38,\"currency\":\"NZD\"}"
-# curl -X POST "http://localhost:5000/currency/" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"price\":150.38,\"currency\":\"NZD\"}"
-# curl -X POST "http://localhost:5000/currency/" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"price\":130,\"currency\":\"CAD\"}"
-
-# testing
-# curl -X POST "httpc_date=2015-2-2" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"price\":100,\"currency\":\"USD\"}"
-# curl -X POST "http://localhost:5000/currency/" -H  "accept: application/json" -H  "Content-Type: application/json" -d "{\"price\":100,\"currency\":\"USD\"}"
 
 def seconds_until_midnight():
     """ Get the number of seconds until midnight """
@@ -126,6 +111,7 @@ app = FastAPI()
 
 @app.post("/currency/")
 async def view(item: Item, historic_date: Optional[str] = None):
+    """ Async function which return the current currency to euro or a currency for a spesific day """
     if historic_date is not None:
         item.date = str(historic_date)
     else:
