@@ -89,34 +89,36 @@ def calculate_currency(item: Item, ) -> dict:
     """ Calculate the current currency retrieving each time the value from API or from cache """
 
     converted_currency = {}
-    if item.currency == "EUR":
-        converted_currency["price_in_euro"] = item.price
-        return converted_currency
-    
-    # First it looks for the data in redis cache
-    concat_key = item.currency + "-" + str(item.date)
-    data = get_values_from_cache(key=concat_key)
-
-    # If cache is found then serves the data from cache
-    if data is not None:
-        print("Serve data from cache")
-        data = json.loads(data)
-        converted_currency["price_in_euro"] = item.price / data
-        return converted_currency
-
-    else:
-        # If cache is not found then sends request to the API
-        print("Serve data from API")
-        data = get_currency(item)
-        
-        # This block sets saves the respose to redis and serves it directly
-        if data.get("rates"):
-            for i in data["rates"]:
-                concat_key = str(i) + "-" + str(item.date)
-                state = set_values_to_cache(key=concat_key, value=data["rates"][i])
-            if state is True:
-                converted_currency["price_in_euro"] = item.price / data.get("rates").get(item.currency)
+    try:
+        if item.currency == "EUR":
+            converted_currency["price_in_euro"] = item.price
             return converted_currency
+        
+        # First it looks for the data in redis cache
+        concat_key = item.currency + "-" + str(item.date)
+        data = get_values_from_cache(key=concat_key)
+        # If cache is found then serves the data from cache
+        if data is not None:
+            print("Serve data from cache")
+            data = json.loads(data)
+            converted_currency["price_in_euro"] = item.price / data
+            return converted_currency
+
+        else:
+            # If cache is not found then sends request to the API
+            print("Serve data from API")
+            data = get_currency(item)
+            # This block sets saves the respose to redis and serves it directly
+            if data.get("rates"):
+                for i in data["rates"]:
+                    concat_key = str(i) + "-" + str(item.date)
+                    state = set_values_to_cache(key=concat_key, value=data["rates"][i])
+                if state is True:
+                    converted_currency["price_in_euro"] = item.price / data.get("rates").get(item.currency)
+                return converted_currency
+    except Exception as ex:
+        print("Exception occured : {}".format(ex))
+        return {"price_in_euro": -1}
 
 
 app = FastAPI()
